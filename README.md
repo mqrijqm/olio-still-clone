@@ -3,6 +3,15 @@
 1:1 UX/layout clone of [drinkstill.nz](https://www.drinkstill.nz/) re-branded for OLIO, a Greek extra virgin olive oil.
 Reference palette `ink` (black) → OLIO olive `#8D906E` and darker shades.
 
+**Live:** https://olio-still-clone.vercel.app · **Repo:** https://github.com/mqrijqm/olio-still-clone
+
+## Languages
+Bosnian (`bs`) is the primary language, English (`en`) via the BS / EN toggle (hero top-right, nav, mobile menu).
+The choice is stored in `localStorage` (`olio-lang`).
+- `src/content/site.ts` — English content + `en` dictionary (the shape is the source of truth)
+- `src/content/bs.ts` — Bosnian dictionary of the same `Dict` type (TypeScript fails if a string is missing)
+- `src/i18n/LocaleProvider.tsx` — `useT()`, `useLocale()`, `<LangToggle />`
+
 ## Stack
 Next.js 16 (App Router) · Tailwind 4 · GSAP + ScrollTrigger + SplitText · Lenis · three.js via React Three Fiber.
 
@@ -21,7 +30,7 @@ Next.js 16 (App Router) · Tailwind 4 · GSAP + ScrollTrigger + SplitText · Len
 Global: `Nav` (appears after hero, mobile menu), `Cursor` (difference-blend ring), grain overlay, cart drawer + demo checkout.
 
 ## Re-using for a new brand
-1. Replace copy in `src/content/site.ts`.
+1. Replace copy in `src/content/site.ts` and `src/content/bs.ts`.
 2. Replace colour tokens in `src/app/globals.css` (`@theme`).
 3. Regenerate media (below) and drop them into `public/`.
 4. 3D tin: `src/components/webgl/Tin.tsx` — box proportions `W/H/D`, label textures come from `products[].labels`.
