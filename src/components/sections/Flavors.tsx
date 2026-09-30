@@ -7,7 +7,7 @@ import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useLenis } from "lenis/react";
 import TinLazy, { type TinControl } from "@/components/webgl/TinLazy";
-import { Eyebrow, Ill, SplitReveal } from "@/components/ui";
+import { Eyebrow, Ill } from "@/components/ui";
 import { products, type Product } from "@/content/site";
 import { prefersReduced } from "@/lib/motion";
 
@@ -15,45 +15,22 @@ gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 const ILL = { "01": "branch", "02": "village", "03": "tree" } as const;
 
+// Svedeno: veliki sans kod proizvoda + jedan kratak opis
 function ProductText({ p, big = true }: { p: Product; big?: boolean }) {
   return (
     <div>
-      <div data-fl-item className="flex items-center justify-between">
-        <span className="font-wordmark font-[900] text-[17px] md:text-[19px] tracking-[-0.02em] text-olive-900">{p.code}</span>
-        <span className="text-[11px] md:text-[12px] tracking-[0.2em] uppercase text-mist">{p.tag}</span>
-      </div>
       <h3
         data-fl-name
-        className="mt-3 font-display font-[300] leading-[0.95] tracking-[-0.035em] text-olive-900"
-        style={{ fontSize: big ? "clamp(64px, min(9vw, 15vh), 136px)" : "clamp(56px, 16vw, 88px)" }}
+        aria-label={`${p.code} ${p.name}`}
+        className="font-wordmark font-[900] uppercase leading-[0.86] tracking-[-0.035em] text-olive-900 whitespace-nowrap"
+        style={{ fontSize: big ? "clamp(56px, min(7.2vw, 14vh), 128px)" : "clamp(48px, 15vw, 84px)" }}
       >
-        {p.name}
-        <span style={{ color: p.accent }}>.</span>
+        OLIO {p.id}
+        <span aria-hidden="true" className="inline-block w-[0.16em] h-[0.16em] ml-[0.05em]" style={{ backgroundColor: p.accent }} />
       </h3>
-      <p data-fl-item className="mt-3 font-display italic text-[19px] md:text-[21px] text-mist">
-        {p.notes}
+      <p data-fl-item className="mt-8 text-[18px] md:text-[20px] leading-[1.55] text-olive-900/80 max-w-[34ch]">
+        {p.desc}
       </p>
-      <p data-fl-item className="mt-5 text-[16px] md:text-[17px] leading-[1.6] text-olive-900/90 max-w-[46ch]">
-        {p.body}
-      </p>
-      <div data-fl-item className="mt-7 h-px w-[72px]" style={{ backgroundColor: p.accent }} />
-      <ul className="mt-6 space-y-[6px] max-w-[480px]">
-        {p.profile.map((r, i) => (
-          <li data-fl-item key={r.label} className="flex items-baseline gap-4">
-            <span className={`font-display tabular-nums text-[20px] w-[64px] ${i === 0 ? "text-olive-900" : "text-olive-900/70"}`}>{r.value}</span>
-            <span className="text-[10px] tracking-[0.12em] uppercase text-mist w-[48px]">{r.unit}</span>
-            <span className={`text-[15px] ${i === 0 ? "text-olive-900" : "text-olive-900/65"}`}>{r.label}</span>
-            {i === 0 && <span className="ml-auto text-[11px] tracking-[0.2em] uppercase text-mist">Lead</span>}
-          </li>
-        ))}
-      </ul>
-      <div data-fl-item className="mt-5 pt-4 border-t border-olive-900/15 flex items-baseline justify-between max-w-[480px]">
-        <span className="text-[11px] tracking-[0.2em] uppercase text-mist">{p.total.label}</span>
-        <span>
-          <span className="font-display text-[22px] tabular-nums">{p.total.value}</span>{" "}
-          <span className="text-[11px] tracking-[0.14em] uppercase text-mist">{p.total.unit}</span>
-        </span>
-      </div>
     </div>
   );
 }
@@ -138,12 +115,9 @@ export function Flavors() {
               {active + 1} / {products.length}
             </div>
           </div>
-          <SplitReveal className="font-display font-[300] leading-[1] tracking-[-0.02em] text-olive-900 whitespace-nowrap" style={{ fontSize: "clamp(32px, min(4.6vw, 6.5vh), 64px)" }}>
-            Three pressings.
-          </SplitReveal>
 
           <div className="flex-1 grid grid-cols-[minmax(0,43%)_1fr] gap-10 items-center min-h-0 pb-[clamp(16px,4vh,48px)]">
-            <div key={p.id} className="max-w-[560px]">
+            <div key={p.id}>
               <ProductText p={p} />
             </div>
 
@@ -162,7 +136,7 @@ export function Flavors() {
                 {p.id}
               </div>
               <div aria-hidden="true" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-olive-900/10" style={{ width: "min(44vh, 30vw)", height: "min(44vh, 30vw)" }} />
-              <TinLazy control={control} index={active} className="absolute inset-0" zoom={0.92} />
+              <TinLazy control={control} index={active} variants={[0, 1, 2]} afterIntro defer={200} className="absolute inset-0" zoom={0.82} />
             </div>
           </div>
         </div>
@@ -185,7 +159,6 @@ export function Flavors() {
       {/* ---------- mobilni: složeno jedno ispod drugog, PNG umesto 3D ---------- */}
       <div className="md:hidden px-6 pt-24 pb-10">
         <Eyebrow n="02" label="Three harvests" />
-        <SplitReveal className="mt-3 font-display font-[300] leading-[1] tracking-[-0.02em] text-[40px]">Three pressings.</SplitReveal>
         {products.map((pr) => (
           <article key={pr.id} className="relative mt-14">
             <div className="relative aspect-[4/5] -mx-6 overflow-hidden" style={{ background: `radial-gradient(60% 60% at 50% 50%, ${pr.accent}55, transparent 75%)` }}>

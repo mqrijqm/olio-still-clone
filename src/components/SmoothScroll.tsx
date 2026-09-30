@@ -19,6 +19,9 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     gsap.ticker.lagSmoothing(0);
     const lenis = lenisRef.current?.lenis;
     lenis?.on("scroll", ScrollTrigger.update);
+    // fontovi menjaju visine teksta → pinovi moraju da se preračunaju kad se učitaju
+    // jedan refresh posle fontova (slike imaju fiksne proporcije i ne pomeraju layout)
+    document.fonts?.ready.then(() => ScrollTrigger.refresh());
     return () => {
       gsap.ticker.remove(update);
       lenis?.off("scroll", ScrollTrigger.update);

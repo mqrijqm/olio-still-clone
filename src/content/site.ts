@@ -32,6 +32,7 @@ export type Product = {
   tag: string;
   body: string;
   short: string;
+  desc: string;
   accent: string;
   tin: string;
   life: string;
@@ -51,6 +52,7 @@ export const products: Product[] = [
     tag: "Signature",
     body: "The signature pressing, picked green in late October. Fresh cut grass, raw artichoke, a clean bitter finish. Built for the everyday table that still deserves the good stuff.",
     short: "For every day, and every plate on it.",
+    desc: "Harvest. Picked green in late October: cut grass, raw artichoke, a clean bitter finish.",
     accent: "#b5ba92",
     tin: "/images/tins/tin-01.webp",
     life: "/images/life/life-01.webp",
@@ -73,6 +75,7 @@ export const products: Product[] = [
     tag: "Village",
     body: "From the oldest trees above the village, some older than the farmhouse. Softer and rounder: green almond, tomato leaf, a slow pepper that arrives late and stays.",
     short: "For slow lunches that turn into dinner.",
+    desc: "Heritage. From the oldest trees above the village: green almond, tomato leaf, a slow pepper.",
     accent: "#dcc9a0",
     tin: "/images/tins/tin-02.webp",
     life: "/images/life/life-02.webp",
@@ -95,6 +98,7 @@ export const products: Product[] = [
     tag: "Early harvest",
     body: "The first fruit of the season, picked while still hard and green. Intense, peppery, almost wild. Small yield, big finish. Pour it last, over something simple.",
     short: "For finishing, not for frying.",
+    desc: "Reserve. The first fruit of the season, pressed small: rocket, black pepper, a long wild finish.",
     accent: "#c9b35e",
     tin: "/images/tins/tin-03.webp",
     life: "/images/life/life-03.webp",

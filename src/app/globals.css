@@ -62,6 +62,7 @@ body {
   opacity: 0.07;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.18 0 0 0 0 0.19 0 0 0 0 0.14 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   animation: grain 1.2s steps(6) infinite;
+  will-change: transform; /* poseban GPU sloj — pomeranje ne okida ponovno crtanje stranice */
 }
 
 @keyframes grain {
@@ -91,10 +92,17 @@ body {
   -webkit-text-stroke: 1px rgba(239, 237, 230, 0.1);
 }
 
-@keyframes scrolldot {
-  0% { transform: translate(-50%, 0); opacity: 1; }
-  70% { transform: translate(-50%, 16px); opacity: 0; }
-  100% { transform: translate(-50%, 0); opacity: 0; }
+/* tačka koja klizi kroz maslinu (ScrollHint) */
+.olive-dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: olive-dot 2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@keyframes olive-dot {
+  0% { transform: translateY(0); opacity: 0; }
+  15% { opacity: 1; }
+  70% { transform: translateY(16px); opacity: 0; }
+  100% { transform: translateY(16px); opacity: 0; }
 }
 
 @keyframes grow {

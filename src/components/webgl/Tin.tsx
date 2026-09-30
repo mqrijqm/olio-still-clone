@@ -1,17 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import gsap from "gsap";
 import { products } from "@/content/site";
 
 /**
  * Pravougaona OLIO limenka napravljena u kodu (bez .glb modela):
  * telo = box sa etiketama (Codex print artwork) na 4 strane, metalne ivice gore/dole,
- * tamni poklopac, zeleni čep i crna ručka. Referenca (drinkstill.nz) koristi can.glb + HDRI;
- * mi koristimo RoomEnvironment (generiše se lokalno, nema 1 MB HDR fajla).
+ * tamni poklopac, zeleni čep i crna ručka. Referenca (drinkstill.nz) koristi can.glb + HDRI.
+ * Ovde: Phong materijali + 3 svetla — shaderi se kompajliraju višestruko brže od PBR+PMREM,
+ * što je na Windows/Direct3D bila glavna kočnica pri učitavanju.
  */
 
 // proporcije prave limenke od 500 ml
@@ -26,46 +26,58 @@ export type TinControl = {
   tiltX: number;
 };
 
-function Env() {
-  const get = useThree((s) => s.get);
-  useEffect(() => {
-    // three.js objekti se namerno menjaju direktno — uzimamo ih preko get() unutar efekta
-    const { gl, scene } = get();
-    const pmrem = new THREE.PMREMGenerator(gl);
-    const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    scene.environment = env;
-    scene.environmentIntensity = 0.7;
-    return () => {
-      env.dispose();
-      pmrem.dispose();
-    };
-  }, [get]);
-  return null;
+// three.js teksture su namenski mutabilne — podešavanje je izdvojeno iz hooka
+function prepTexture(t: THREE.Texture, anisotropy: number) {
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = anisotropy;
 }
 
-function useLabelMaterials() {
-  const urls = products.flatMap((p) => [p.labels.front, p.labels.side]);
+function useLabelMaterials(variants: number[]) {
+  // učitavaju se SAMO etikete varijanti koje ova scena prikazuje (hero/Inside = 1 limenka)
+  const urls = variants.flatMap((v) => [products[v].labels.front, products[v].labels.side]);
   const tex = useLoader(THREE.TextureLoader, urls);
-  const { gl } = useThree();
+  const get = useThree((s) => s.get);
+  const key = variants.join(",");
 
   return useMemo(() => {
-    tex.forEach((t) => {
-      t.colorSpace = THREE.SRGBColorSpace;
-      t.anisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
+    const { gl } = get();
+    const out: Record<number, { front: THREE.Material; side: THREE.Material; color: string }> = {};
+    variants.forEach((v, i) => {
+      const mk = (map: THREE.Texture) => {
+        prepTexture(map, Math.min(4, gl.capabilities.getMaxAnisotropy()));
+        // Phong: brz shader, blagi odsjaj kao na štampanom limu
+        return new THREE.MeshPhongMaterial({ map, shininess: 26, specular: new THREE.Color("#3a3a34") });
+      };
+      out[v] = { front: mk(tex[i * 2]), side: mk(tex[i * 2 + 1]), color: products[v].tinColor };
     });
-    // za svaki proizvod: [front, side] materijali
-    return products.map((p, i) => {
-      const mk = (map: THREE.Texture) =>
-        new THREE.MeshPhysicalMaterial({
-          map,
-          roughness: 0.42,
-          metalness: 0.18,
-          clearcoat: 0.2,
-          clearcoatRoughness: 0.35,
-        });
-      return { front: mk(tex[i * 2]), side: mk(tex[i * 2 + 1]), color: p.tinColor };
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `key` je stabilna verzija `variants`
+  }, [tex, get, key]);
+}
+
+/**
+ * "Zagrevanje": teksture se pošalju na GPU i shaderi se kompajliraju odmah po učitavanju,
+ * a ne u trenutku kad scena prvi put uđe u ekran (to je izazivalo trzaje na skrolu).
+ */
+function Warmup({ onReady }: { onReady: () => void }) {
+  const get = useThree((s) => s.get);
+  useEffect(() => {
+    const { gl, scene, camera } = get();
+    scene.traverse((o) => {
+      const m = (o as THREE.Mesh).material;
+      (Array.isArray(m) ? m : m ? [m] : []).forEach((mat) => {
+        const map = (mat as THREE.MeshPhongMaterial).map;
+        if (map) gl.initTexture(map);
+      });
     });
-  }, [tex, gl]);
+    // compileAsync koristi paralelno kompajliranje (KHR_parallel_shader_compile) — ne blokira stranicu
+    let alive = true;
+    gl.compileAsync(scene, camera).then(() => alive && onReady());
+    return () => {
+      alive = false;
+    };
+  }, [get, onReady]);
+  return null;
 }
 
 function handleCurve() {
@@ -81,17 +93,17 @@ function handleCurve() {
   return new THREE.CatmullRomCurve3(pts);
 }
 
-function TinMesh({ index, control }: { index: number; control: React.RefObject<TinControl> }) {
+function TinMesh({ index, control, variants }: { index: number; control: React.RefObject<TinControl>; variants: number[] }) {
   const group = useRef<THREE.Group>(null);
-  const mats = useLabelMaterials();
+  const mats = useLabelMaterials(variants);
   const [shown, setShown] = useState(index);
   const prev = useRef(index);
   const mouse = useRef({ x: 0, y: 0 });
 
-  const steel = useMemo(() => new THREE.MeshStandardMaterial({ color: "#c9c9c4", metalness: 1, roughness: 0.28 }), []);
-  const lid = useMemo(() => new THREE.MeshStandardMaterial({ color: "#1b1c18", metalness: 0.85, roughness: 0.32 }), []);
-  const cap = useMemo(() => new THREE.MeshStandardMaterial({ color: "#2f6b3d", metalness: 0.2, roughness: 0.38 }), []);
-  const black = useMemo(() => new THREE.MeshStandardMaterial({ color: "#111210", metalness: 0.1, roughness: 0.45 }), []);
+  const steel = useMemo(() => new THREE.MeshPhongMaterial({ color: "#b9b9b3", specular: new THREE.Color("#ffffff"), shininess: 90 }), []);
+  const lid = useMemo(() => new THREE.MeshPhongMaterial({ color: "#1b1c18", specular: new THREE.Color("#8a8a84"), shininess: 60 }), []);
+  const cap = useMemo(() => new THREE.MeshPhongMaterial({ color: "#2f6b3d", specular: new THREE.Color("#556655"), shininess: 40 }), []);
+  const black = useMemo(() => new THREE.MeshPhongMaterial({ color: "#111210", specular: new THREE.Color("#444444"), shininess: 30 }), []);
   const curve = useMemo(() => handleCurve(), []);
 
   // promena proizvoda: pun okret, zamena tekstura dok je limenka "bočno"
@@ -136,8 +148,8 @@ function TinMesh({ index, control }: { index: number; control: React.RefObject<T
     g.rotation.z = Math.sin(t * 0.6) * 0.015 * c.float;
   });
 
-  const m = mats[shown];
-  const tinTint = useMemo(() => new THREE.MeshStandardMaterial({ color: m.color, metalness: 0.3, roughness: 0.5 }), [m.color]);
+  const m = mats[shown] ?? mats[variants[0]];
+  const tinTint = useMemo(() => new THREE.MeshPhongMaterial({ color: m.color, shininess: 20 }), [m.color]);
   // BoxGeometry grupe: +x, -x, +y, -y, +z, -z
   const bodyMats = useMemo(() => [m.side, m.side, tinTint, tinTint, m.front, m.side], [m, tinTint]);
 
@@ -224,46 +236,102 @@ export default function TinScene({
   className = "",
   zoom = 1,
   shadow = true,
+  variants = [0],
+  defer = 0,
+  afterIntro = false,
+  onReady: onReadyProp,
 }: {
   index?: number;
   control: React.RefObject<TinControl>;
   className?: string;
   zoom?: number;
   shadow?: boolean;
+  /** koje limenke (indeksi u products) scena učitava */
+  variants?: number[];
+  /** ms pre montiranja (posle intro-a ako je afterIntro) */
+  defer?: number;
+  /** montiraj tek kad hero intro završi — da ne otima frejmove animaciji */
+  afterIntro?: boolean;
+  onReady?: () => void;
 }) {
   const wrap = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
+  const [mounted, setMounted] = useState(defer === 0 && !afterIntro);
+  const [ready, setReady] = useState(false);
+  const [warm, setWarm] = useState(true);
 
   // renderuj samo kad je canvas na ekranu — štedi GPU na slabijim laptopovima
   useEffect(() => {
     const el = wrap.current;
     if (!el) return;
-    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { rootMargin: "100px" });
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { rootMargin: "200px" });
     io.observe(el);
     return () => io.disconnect();
   }, []);
 
-  const dpr: [number, number] = typeof navigator !== "undefined" && (navigator.hardwareConcurrency ?? 8) <= 4 ? [1, 1.25] : [1, 1.75];
+  // odloženo montiranje: posle intro-a (+ `defer` ms), u trenutku kad je browser besposlen
+  useEffect(() => {
+    if (mounted) return;
+    let t = 0;
+    let idle = 0;
+    const start = () => {
+      t = window.setTimeout(() => {
+        const ric = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1));
+        idle = ric(() => setMounted(true), { timeout: 1500 } as IdleRequestOptions) as unknown as number;
+      }, defer);
+    };
+    const w = window as Window & { __olioIntroDone?: boolean };
+    if (!afterIntro || w.__olioIntroDone) start();
+    else window.addEventListener("olio:intro-done", start, { once: true });
+    return () => {
+      window.removeEventListener("olio:intro-done", start);
+      window.clearTimeout(t);
+      window.cancelIdleCallback?.(idle);
+    };
+  }, [defer, afterIntro, mounted]);
+
+  // ref da useCallback ostane stabilan (Warmup ga ima u zavisnostima)
+  const readyCb = useRef(onReadyProp);
+  useEffect(() => {
+    readyCb.current = onReadyProp;
+  }, [onReadyProp]);
+
+  const onReady = useCallback(() => {
+    setReady(true);
+    readyCb.current?.();
+    // par frejmova i van ekrana da se sve pripremi, pa se renderovanje gasi
+    window.setTimeout(() => setWarm(false), 600);
+  }, []);
+
+  const dpr: [number, number] = typeof navigator !== "undefined" && (navigator.hardwareConcurrency ?? 8) <= 4 ? [1, 1.25] : [1, 1.5];
 
   return (
-    <div ref={wrap} className={className}>
-      <Canvas
-        frameloop={inView ? "always" : "never"}
-        dpr={dpr}
-        camera={{ position: [0, 0.35, 4.2 / zoom], fov: 30 }}
-        gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
-        onCreated={({ gl }) => {
-          gl.toneMapping = THREE.ACESFilmicToneMapping;
-          gl.toneMappingExposure = 0.92;
-        }}
-      >
-        <Env />
-        <CameraFit zoom={zoom} />
-        <directionalLight position={[-3, 4, 3]} intensity={1.6} />
-        <directionalLight position={[3, 1, -2]} intensity={0.5} color="#dfe3c8" />
-        <TinMesh index={index} control={control} />
-        {shadow && <Shadow />}
-      </Canvas>
+    <div ref={wrap} className={`${className} transition-opacity duration-700 ease-out`} style={{ opacity: ready ? 1 : 0 }}>
+      {mounted && (
+        <Canvas
+          frameloop={inView || warm ? "always" : "never"}
+          // meri offsetWidth (bez CSS transformacija) i ne reaguje na skrol — inače se platno
+          // realocira na svakom frejmu dok roditelj ima scale animaciju (glavni uzrok trzanja)
+          resize={{ scroll: false, offsetSize: true, debounce: { scroll: 0, resize: 150 } }}
+          dpr={dpr}
+          camera={{ position: [0, 0.35, 4.2 / zoom], fov: 30 }}
+          gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+          onCreated={({ gl }) => {
+            gl.toneMapping = THREE.ACESFilmicToneMapping;
+            gl.toneMappingExposure = 0.92;
+          }}
+        >
+          <CameraFit zoom={zoom} />
+          <hemisphereLight args={["#fbfaf4", "#6f7158", 1.35]} />
+          <directionalLight position={[-3, 4, 3]} intensity={1.9} />
+          <directionalLight position={[3, 1, -2]} intensity={0.7} color="#dfe3c8" />
+          <Suspense fallback={null}>
+            <TinMesh index={index} control={control} variants={variants} />
+            {shadow && <Shadow />}
+            <Warmup onReady={onReady} />
+          </Suspense>
+        </Canvas>
+      )}
     </div>
   );
 }

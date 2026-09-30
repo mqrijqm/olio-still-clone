@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import TinLazy, { type TinControl } from "@/components/webgl/TinLazy";
 import { brand, heroSupport } from "@/content/site";
 import { prefersReduced } from "@/lib/motion";
+import { ScrollHint } from "@/components/ui";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -16,28 +17,60 @@ export function Hero() {
   const root = useRef<HTMLElement>(null);
   const circle = useRef<HTMLDivElement>(null);
   const control = useRef<TinControl>({ rotY: 0, spin: 0, float: 1, tiltX: 0 });
+  // razrešava se kad je hero limenka spremna (teksture na GPU, shaderi kompajlirani)
+  const [tinGate] = useState(() => {
+    let resolve: () => void = () => {};
+    const promise = new Promise<void>((r) => (resolve = r));
+    return { promise, resolve };
+  });
 
   useGSAP(
     () => {
       const q = gsap.utils.selector(root);
       const clip = circle.current!;
       const reduced = prefersReduced();
-      const state = { r: 0 }; // poluprečnik kruga u px
-      const setClip = () => (clip.style.clipPath = `circle(${state.r}px at 50% 48%)`);
+      const lens = q("[data-lens]")[0] as HTMLElement;
       const small = () => Math.min(window.innerHeight * 0.26, window.innerWidth * 0.42);
       const big = () => Math.hypot(window.innerWidth, window.innerHeight);
+      const easeIn = gsap.parseEase("power2.in");
+      // krug i sočivo zavise od DVA nezavisna napretka: intro (0→1) i skrol (0→1).
+      // Tako se intro animacija i skrol-timeline nikad ne bore oko iste vrednosti.
+      const st = { intro: 0, scroll: 0 };
+      const render = () => {
+        const r0 = st.intro * small();
+        const k = easeIn(st.scroll);
+        clip.style.clipPath = `circle(${r0 + (big() - r0) * k}px at 50% 48%)`;
+        lens.style.opacity = String(st.intro * (1 - k));
+        lens.style.transform = `translate(-50%, -50%) scale(${(0.6 + 0.4 * st.intro) * (1 + 5 * k)})`;
+      };
 
       // 1) intro: slova ulaze, zatim se krug otvara
-      const intro = gsap.timeline({ delay: 0.2 });
+      const done = () => {
+        (window as Window & { __olioIntroDone?: boolean }).__olioIntroDone = true;
+        window.dispatchEvent(new Event("olio:intro-done"));
+      };
+      // intro je pauziran dok se teški posao (fontovi, 3D) ne završi — inače se takmiče za iste frejmove
+      const intro = gsap.timeline({ paused: true, onComplete: done });
       intro
-        .from(q("[data-letter]"), { yPercent: 105, duration: 1.2, ease: "expo.out", stagger: 0.07 })
-        .from(q("[data-hero-foot]"), { opacity: 0, y: 12, duration: 0.8, ease: "power3.out", stagger: 0.08 }, "-=0.7")
-        .to(state, { r: small(), duration: 1.2, ease: "expo.out", onUpdate: setClip }, "-=0.6")
-        .fromTo(q("[data-lens]"), { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 1.2, ease: "expo.out" }, "<");
+        // y: 0 poništava početni inline translateY(105%) koji GSAP inače pročita kao piksele
+        .fromTo(q("[data-letter]"), { yPercent: 105, y: 0 }, { yPercent: 0, y: 0, duration: 1.2, ease: "expo.out", stagger: 0.07 })
+        .fromTo(q("[data-dot]"), { yPercent: 400, y: 0, opacity: 0 }, { yPercent: 0, y: 0, opacity: 1, duration: 1, ease: "expo.out" }, 0.35)
+        .fromTo(q("[data-hero-foot]"), { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.8, ease: "power3.out", stagger: 0.08 }, "-=0.7")
+        .to(st, { intro: 1, duration: 1.2, ease: "expo.out", onUpdate: render }, "-=0.6");
+
+      const wait = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms));
+      let cancelled = false;
+      Promise.race([Promise.all([document.fonts?.ready ?? Promise.resolve(), tinGate.promise]), wait(2200)])
+        .then(() => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))))
+        .then(() => {
+          if (!cancelled) intro.delay(0.1).play();
+        });
 
       if (reduced) {
         intro.progress(1);
-        return;
+        return () => {
+          cancelled = true;
+        };
       }
 
       // 2) scroll: krug se širi preko celog ekrana, pa se pojavljuje tekst
@@ -50,11 +83,13 @@ export function Hero() {
           pinSpacing: true,
           scrub: 0.6,
           invalidateOnRefresh: true,
-          onEnter: () => intro.progress(1),
+          // premotaj intro samo ako korisnik stvarno skroluje pre kraja (onEnter bi okinuo već na y=0)
+          onUpdate: (self) => {
+            if (self.progress > 0.01 && intro.progress() < 1) intro.progress(1);
+          },
         },
       });
-      tl.fromTo(state, { r: () => small() }, { r: () => big(), ease: "power2.in", duration: 0.5, onUpdate: setClip, immediateRender: false })
-        .to(q("[data-lens]"), { scale: 6, opacity: 0, ease: "power2.in", duration: 0.5 }, 0)
+      tl.to(st, { scroll: 1, ease: "none", duration: 0.5, onUpdate: render }, 0)
         .to(q("[data-scroll-hint]"), { opacity: 0, duration: 0.1 }, 0)
         .to(q("[data-glow]"), { scale: 1.35, duration: 0.5 }, 0)
         .to(q("[data-tin-wrap]"), { scale: 1.09, xPercent: 6, duration: 0.5 }, 0.2)
@@ -62,9 +97,15 @@ export function Hero() {
         .from(q("[data-support-rule]"), { scaleX: 0, transformOrigin: "0% 50%", duration: 0.2 }, 0.55)
         .to({}, { duration: 0.25 });
 
+      const onResize = () => render();
+      window.addEventListener("resize", onResize);
       tl.eventCallback("onUpdate", () => {
         control.current.rotY = tl.progress() * 0.9;
       });
+      return () => {
+        cancelled = true;
+        window.removeEventListener("resize", onResize);
+      };
     },
     { scope: root }
   );
@@ -82,29 +123,26 @@ export function Hero() {
               <span className="sr-only">OLIO.</span>
               <span aria-hidden="true" className="inline-flex items-end overflow-hidden pb-[0.02em]">
                 {"OLIO".split("").map((l, i) => (
-                  <span key={i} data-letter className="inline-block">
+                  <span key={i} data-letter className="inline-block" style={{ transform: "translateY(105%)" }}>
                     {l}
                   </span>
                 ))}
-                <span data-letter className="inline-block w-[0.2em] h-[0.2em] ml-[0.03em] mb-[0.005em]" style={{ backgroundColor: ACCENT }} />
+                <span data-dot className="inline-block w-[0.2em] h-[0.2em] ml-[0.03em] mb-[0.005em]" style={{ backgroundColor: ACCENT, opacity: 0, transform: "translateY(400%)" }} />
               </span>
             </h1>
           </div>
           <div className="absolute inset-x-0 bottom-0 flex items-end justify-between px-[clamp(20px,4vw,64px)] pb-[clamp(20px,4vh,44px)]">
-            <p data-hero-foot className="font-display font-[300] text-olive-900 leading-[1.15] tracking-[-0.01em]" style={{ fontSize: "clamp(17px,1.5vw,24px)" }}>
+            <p data-hero-foot style={{ opacity: 0 }} className="font-display font-[300] text-olive-900 leading-[1.15] tracking-[-0.01em] text-[clamp(17px,1.5vw,24px)]">
               {brand.tagline[0]}
               <br />
               {brand.tagline[1]}
             </p>
-            <div data-hero-foot className="hidden sm:block">
-              <div data-scroll-hint className="flex flex-col items-center gap-3" aria-hidden="true">
-                <span className="font-sans text-[11px] uppercase tracking-[0.28em] text-mist">Scroll</span>
-                <span className="relative block" style={{ width: 22, height: 38, border: "1px solid rgba(47,49,36,0.3)", borderRadius: 11 }}>
-                  <span className="absolute left-1/2 -translate-x-1/2 top-[7px] w-[5px] h-[5px] animate-[scrolldot_1.8s_ease-in-out_infinite]" style={{ backgroundColor: ACCENT }} />
-                </span>
+            <div data-hero-foot style={{ opacity: 0 }} className="hidden sm:block">
+              <div data-scroll-hint>
+                <ScrollHint />
               </div>
             </div>
-            <p data-hero-foot className="font-sans uppercase text-mist text-right" style={{ fontSize: 11, letterSpacing: "0.24em", lineHeight: 1.8 }}>
+            <p data-hero-foot className="font-sans uppercase text-mist text-right" style={{ fontSize: 11, letterSpacing: "0.24em", lineHeight: 1.8, opacity: 0 }}>
               {brand.meta[0]}
               <br />
               {brand.meta[1]}
@@ -122,11 +160,10 @@ export function Hero() {
               width: "70vh",
               height: "70vh",
               background: `radial-gradient(circle, rgba(181,186,146,0.55) 0%, rgba(181,186,146,0.28) 30%, rgba(141,144,110,0.1) 55%, rgba(141,144,110,0) 72%)`,
-              filter: "blur(8px)",
             }}
           />
           <div data-tin-wrap className="absolute inset-0">
-            <TinLazy control={control} index={0} className="absolute inset-0" zoom={0.5} />
+            <TinLazy control={control} index={0} onReady={tinGate.resolve} className="absolute inset-0" zoom={0.5} />
           </div>
           <div className="absolute inset-y-0 left-0 z-10 hidden md:flex flex-col justify-center pl-[clamp(24px,7vw,120px)] pointer-events-none" style={{ width: "min(100%, 36vw)" }}>
             <div data-support-item className="font-sans text-[12px] tracking-[0.2em] uppercase text-bone/60">
@@ -158,11 +195,13 @@ export function Hero() {
         <div
           data-lens
           aria-hidden="true"
-          className="absolute left-1/2 top-[48%] z-30 pointer-events-none rounded-full -translate-x-1/2 -translate-y-1/2 opacity-0"
+          className="absolute left-1/2 top-[48%] z-30 pointer-events-none rounded-full"
           style={{
             width: "min(58vh, 72vw)",
             height: "min(58vh, 72vw)",
             background: "radial-gradient(circle, transparent 56%, rgba(47,49,36,0.12) 70%, transparent 84%)",
+            opacity: 0,
+            transform: "translate(-50%, -50%) scale(0.6)",
           }}
         />
       </section>

@@ -133,7 +133,7 @@ export function Inside() {
         </div>
 
         <div className="order-1 md:order-2 relative h-[46vh] md:h-full min-h-[300px]">
-          <TinLazy control={control} index={0} className="absolute inset-0" zoom={0.8} />
+          <TinLazy control={control} index={0} variants={[0]} afterIntro defer={1200} className="absolute inset-0" zoom={0.8} />
         </div>
 
         <div className="order-3">

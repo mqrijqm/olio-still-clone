@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLenis } from "lenis/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { nav } from "@/content/site";
 import { useCart } from "./cart/CartProvider";
 import { Icon } from "./Icon";
@@ -23,18 +24,16 @@ export function Nav() {
 
   // Nav se pojavljuje tek kad hero prođe (kao u referenci)
   useEffect(() => {
-    const check = () => {
-      const hero = document.getElementById("hero-end");
-      const y = hero ? hero.getBoundingClientRect().top : 0;
-      setVisible(y <= 1);
-    };
-    check();
-    window.addEventListener("scroll", check, { passive: true });
-    window.addEventListener("resize", check);
-    return () => {
-      window.removeEventListener("scroll", check);
-      window.removeEventListener("resize", check);
-    };
+    // ScrollTrigger umesto scroll listenera: bez merenja layouta na svakom frejmu
+    const st = ScrollTrigger.create({
+      trigger: "#hero-end",
+      start: "top top+=1",
+      onToggle: (self) => setVisible(self.isActive),
+      endTrigger: "html",
+      refreshPriority: -1, // računa se posle pinova koji su iznad njega
+      end: "bottom bottom",
+    });
+    return () => st.kill();
   }, []);
 
   const go = (href: string) => {

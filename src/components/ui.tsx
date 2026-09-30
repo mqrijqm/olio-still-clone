@@ -53,16 +53,22 @@ export function SplitReveal({
     () => {
       const el = ref.current;
       if (!el || prefersReduced()) return;
-      const split = SplitText.create(el, { type: type === "lines" ? "lines" : `words,${type}`, mask: type === "lines" ? "lines" : "words" });
-      const targets = type === "chars" ? split.chars : type === "words" ? split.words : split.lines;
-      gsap.from(targets, {
-        yPercent: 110,
-        duration: type === "lines" ? 1.1 : 0.9,
-        ease: "expo.out",
-        stagger: type === "chars" ? 0.018 : 0.06,
-        scrollTrigger: { trigger: el, start, once: true },
+      // split + tween se prave tek kad naslov uđe u ekran — ne sve odjednom na loadu
+      let split: SplitText | null = null;
+      const st = ScrollTrigger.create({
+        trigger: el,
+        start,
+        once: true,
+        onEnter: () => {
+          split = SplitText.create(el, { type: type === "lines" ? "lines" : `words,${type}`, mask: type === "lines" ? "lines" : "words" });
+          const targets = type === "chars" ? split.chars : type === "words" ? split.words : split.lines;
+          gsap.from(targets, { yPercent: 110, duration: type === "lines" ? 1.1 : 0.9, ease: "expo.out", stagger: type === "chars" ? 0.018 : 0.06 });
+        },
       });
-      return () => split.revert();
+      return () => {
+        st.kill();
+        split?.revert();
+      };
     },
     { scope: ref }
   );
@@ -130,5 +136,26 @@ export function Ill({
         ...style,
       }}
     />
+  );
+}
+
+/**
+ * Scroll indikator u obliku masline: kontura masline sa peteljkom i listićem,
+ * unutra tačka koja klizi nadole; "Scroll" ispod.
+ */
+export function ScrollHint({ className = "", dark = false }: { className?: string; dark?: boolean }) {
+  const line = dark ? "rgba(239,237,230,0.45)" : "rgba(47,49,36,0.38)";
+  return (
+    <div className={`flex flex-col items-center gap-3 ${className}`} aria-hidden="true">
+      <svg width="30" height="50" viewBox="0 0 30 50" fill="none" stroke={line} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="overflow-visible">
+        {/* peteljka i list */}
+        <path d="M15 12 C15.4 8.6 16.6 5.6 18.6 3" />
+        <path d="M17.4 5.2 C20.6 3.4 24.4 3.2 27.4 4.6 C24.6 7.2 20.8 7.6 17.4 5.2 Z" />
+        {/* plod masline, blago asimetričan */}
+        <path d="M15 12.2 C8.6 12.4 5.2 19.6 5.4 28.4 C5.6 38.2 9.6 45.6 15.2 45.6 C21 45.6 24.8 38.4 24.6 28.6 C24.4 19.4 21.2 12 15 12.2 Z" />
+        <circle className="olive-dot" cx="15" cy="21" r="2.2" fill="#b5ba92" stroke="none" />
+      </svg>
+      <span className={`font-sans text-[11px] uppercase tracking-[0.28em] ${dark ? "text-bone/55" : "text-mist"}`}>Scroll</span>
+    </div>
   );
 }
