@@ -1,26 +1,123 @@
 @import "tailwindcss";
 
+/*
+  OLIO tokeni. Referenca (drinkstill.nz) koristi bone + ink (crna).
+  Kod nas: sve što je bilo crno → maslinasta #8D906E i njene tamnije nijanse.
+*/
+@theme {
+  --color-bone: #efede6;
+  --color-bone-2: #e7e4db;
+  --color-mist: #85836f;
+
+  --color-olive: #8d906e;
+  --color-olive-300: #b5b893;
+  --color-olive-600: #74775a;
+  --color-olive-700: #5c5f47;
+  --color-olive-800: #45473a;
+  --color-olive-900: #2f3124;
+  --color-olive-950: #222419;
+
+  /* akcenti po proizvodu (u referenci: plava / breskva / lila) */
+  --color-sage: #b5ba92;
+  --color-sand: #dcc9a0;
+  --color-gold: #c9b35e;
+
+  --font-sans: var(--font-inter-tight), -apple-system, system-ui, sans-serif;
+  --font-display: var(--font-newsreader), Georgia, serif;
+  --font-wordmark: var(--font-archivo), system-ui, sans-serif;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --nav-h: 72px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--color-bone);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bone);
+  color: var(--color-olive-900);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Söhne Breit zamena: Archivo na maksimalnoj širini */
+.font-wordmark {
+  font-stretch: 125%;
+  font-variation-settings: "wdth" 125;
+}
+
+::selection {
+  background: var(--color-olive);
+  color: var(--color-bone);
+}
+
+/* Film grain preko celog sajta (kao u referenci) */
+.grain-overlay {
+  position: fixed;
+  inset: -50%;
+  z-index: 150;
+  pointer-events: none;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.18 0 0 0 0 0.19 0 0 0 0 0.14 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain 1.2s steps(6) infinite;
+}
+
+@keyframes grain {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-3%, 2%); }
+  40% { transform: translate(2%, -3%); }
+  60% { transform: translate(-2%, -1%); }
+  80% { transform: translate(3%, 3%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* Custom cursor: sakrij sistemski samo na uređajima sa mišem */
+@media (hover: hover) and (pointer: fine) {
+  html.has-custom-cursor,
+  html.has-custom-cursor * {
+    cursor: none !important;
+  }
+}
+
+/* Obrisni (outline) broj u pozadini sekcija */
+.outline-num {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(47, 49, 36, 0.12);
+}
+.outline-num-dark {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(239, 237, 230, 0.1);
+}
+
+@keyframes scrolldot {
+  0% { transform: translate(-50%, 0); opacity: 1; }
+  70% { transform: translate(-50%, 16px); opacity: 0; }
+  100% { transform: translate(-50%, 0); opacity: 0; }
+}
+
+@keyframes grow {
+  0% { transform: scaleY(0); transform-origin: top; }
+  50% { transform: scaleY(1); transform-origin: top; }
+  51% { transform: scaleY(1); transform-origin: bottom; }
+  100% { transform: scaleY(0); transform-origin: bottom; }
+}
+
+/* Marquee */
+@keyframes marquee-l { to { transform: translateX(-50%); } }
+@keyframes marquee-r { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+.marquee-l { animation: marquee-l 40s linear infinite; }
+.marquee-r { animation: marquee-r 46s linear infinite; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .grain-overlay { animation: none; }
 }

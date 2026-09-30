@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OLIO — product/ecommerce use case (clone of drinkstill.nz)
 
-## Getting Started
+1:1 UX/layout clone of [drinkstill.nz](https://www.drinkstill.nz/) re-branded for OLIO, a Greek extra virgin olive oil.
+Reference palette `ink` (black) → OLIO olive `#8D906E` and darker shades.
 
-First, run the development server:
+## Stack
+Next.js 16 (App Router) · Tailwind 4 · GSAP + ScrollTrigger + SplitText · Lenis · three.js via React Three Fiber.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Sections (same order and scroll lengths as the reference)
+| Section | File | Behaviour |
+|---|---|---|
+| Hero | `sections/Hero.tsx` | letter intro → circle mask with 3D tin → circle grows to full dark screen (pin +120%) |
+| Harvests | `sections/Flavors.tsx` | pinned +300%, 3 products swap by scroll, 3D tin spins + swaps labels |
+| Inside | `sections/Inside.tsx` | pinned +400%, 4 tabs, tin rotates with scroll, counter + level bar |
+| Story | `sections/Story.tsx` | intro + pinned chapters with outline years, image reveal, timeline |
+| Details | `sections/Details.tsx` | close-up gallery with parallax (not in reference) |
+| Press | `sections/Press.tsx` | quotes + double marquee |
+| Stockists / Shop | `sections/Shop.tsx` | city lists, coming soon, product cards (size toggle, hover → lifestyle photo) |
+| Footer | `sections/Footer.tsx` | newsletter + links |
+
+Global: `Nav` (appears after hero, mobile menu), `Cursor` (difference-blend ring), grain overlay, cart drawer + demo checkout.
+
+## Re-using for a new brand
+1. Replace copy in `src/content/site.ts`.
+2. Replace colour tokens in `src/app/globals.css` (`@theme`).
+3. Regenerate media (below) and drop them into `public/`.
+4. 3D tin: `src/components/webgl/Tin.tsx` — box proportions `W/H/D`, label textures come from `products[].labels`.
+
+## Media pipeline (Codex, gpt-6-sol — never Astra)
+Lives in `../_gen`:
+- `style.txt` — brand art direction, `bX.txt` — one image per line `filename | ratio | subject`
+- `./run.sh b1.txt` — generates via `codex exec` (brand tin photos attached with `-i`)
+- `./collect.sh log-b1.txt.log` — copies images to `out/` using the `MAP` lines Codex prints
+- Ink illustrations → SVG: `magick … -threshold` → `potrace -s` (see `_gen/svg`)
+- Icons: `icons-prompt.txt` → Codex writes SVG → `src/components/Icon.tsx`
+
+## Dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+pnpm dev
+pnpm build
+```
