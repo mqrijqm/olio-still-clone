@@ -6,17 +6,19 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { prefersReduced } from "@/lib/motion";
+import { useT } from "@/i18n/LocaleProvider";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 const shots = [
-  { src: "/images/detail/detail-cap.webp", fig: "Fig. 06 · The cap, pressed green", cls: "md:col-span-4 aspect-square", speed: -8 },
-  { src: "/images/detail/detail-pour.webp", fig: "Fig. 07 · First pour of the season", cls: "md:col-span-8 aspect-[16/9]", speed: 6 },
-  { src: "/images/detail/detail-label.webp", fig: "Fig. 08 · Ink, drawn by hand", cls: "md:col-span-5 md:col-start-6 aspect-square", speed: -5 },
+  { src: "/images/detail/detail-cap.webp", cls: "md:col-span-4 aspect-square", speed: -8 },
+  { src: "/images/detail/detail-pour.webp", cls: "md:col-span-8 aspect-[16/9]", speed: 6 },
+  { src: "/images/detail/detail-label.webp", cls: "md:col-span-5 md:col-start-6 aspect-square", speed: -5 },
 ];
 
 // Close-up detalji limenke — mala editorijalna galerija sa paralaksom
 export function Details() {
+  const { details } = useT();
   const root = useRef<HTMLElement>(null);
   useGSAP(
     () => {
@@ -32,18 +34,18 @@ export function Details() {
     { scope: root }
   );
   return (
-    <section ref={root} aria-label="Details" className="relative w-full bg-bone pb-28 md:pb-40">
+    <section ref={root} className="relative w-full bg-bone pb-28 md:pb-40">
       <div className="mx-auto max-w-[1440px] px-6 md:px-[clamp(24px,7vw,140px)] grid md:grid-cols-12 gap-x-8 gap-y-14 md:gap-y-24">
-        {shots.map((s) => (
+        {shots.map((s, i) => (
           <figure key={s.src} className={s.cls.split(" ").filter((c) => c.startsWith("md:col")).join(" ")}>
             <div data-clip className={`relative overflow-hidden bg-bone-2 ${s.cls.split(" ").filter((c) => c.startsWith("aspect")).join(" ")}`}>
               <div data-par={s.speed} className="absolute inset-[-10%]">
-                <Image src={s.src} alt={s.fig} fill sizes="(min-width: 768px) 60vw, 100vw" className="object-cover" />
+                <Image src={s.src} alt={details.figs[i]} fill sizes="(min-width: 768px) 60vw, 100vw" className="object-cover" />
               </div>
             </div>
             <figcaption className="mt-4 flex gap-3 text-[11px] tracking-[0.2em] uppercase text-mist">
               <span className="mt-[5px] w-[6px] h-[6px] shrink-0 bg-olive" />
-              {s.fig}
+              {details.figs[i]}
             </figcaption>
           </figure>
         ))}

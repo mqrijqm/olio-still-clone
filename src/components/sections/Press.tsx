@@ -1,9 +1,10 @@
 "use client";
 
 import { Eyebrow, Ill, Reveal, SplitReveal } from "@/components/ui";
-import { press } from "@/content/site";
+import { useT } from "@/i18n/LocaleProvider";
 
 function Row({ dim = false, dir = "l" }: { dim?: boolean; dir?: "l" | "r" }) {
+  const { press } = useT();
   const names = [...press.names, ...press.names];
   return (
     <div className="overflow-hidden">
@@ -28,6 +29,7 @@ function Row({ dim = false, dir = "l" }: { dim?: boolean; dir?: "l" | "r" }) {
 }
 
 export function Press() {
+  const { press } = useT();
   return (
     <section id="press" className="relative w-full bg-olive-900 text-bone overflow-hidden pt-24 md:pt-[140px]">
       <Ill name="tree" className="absolute right-[-6vw] top-[-4vw] w-[44vw] h-[44vw] opacity-[0.05] hidden md:block" color="#efede6" />

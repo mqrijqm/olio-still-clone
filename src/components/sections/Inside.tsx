@@ -8,15 +8,18 @@ import { useLenis } from "lenis/react";
 import TinLazy, { type TinControl } from "@/components/webgl/TinLazy";
 import { Icon } from "@/components/Icon";
 import { Ill } from "@/components/ui";
-import { inside } from "@/content/site";
+import { inside as insideEn } from "@/content/site";
+import { useT } from "@/i18n/LocaleProvider";
+
 import { prefersReduced } from "@/lib/motion";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 const GLOWS = ["141,144,110", "201,179,94", "181,186,146", "220,201,160"];
-const n = inside.items.length;
+const n = insideEn.items.length;
 
 export function Inside() {
+  const { inside, ui } = useT();
   const root = useRef<HTMLElement>(null);
   const detail = useRef<HTMLDivElement>(null);
   const st = useRef<ScrollTrigger | null>(null);
@@ -104,7 +107,7 @@ export function Inside() {
         <h2 className="mt-3 font-display italic font-[400] tracking-[-0.03em] leading-none" style={{ fontSize: "clamp(52px, min(6vw, 9vh), 88px)" }}>
           {inside.title}
         </h2>
-        <div role="tablist" aria-label="Inside the tin" className="mt-6 md:mt-8 flex gap-3 md:gap-4 justify-start md:justify-center overflow-x-auto no-scrollbar -mx-5 px-5">
+        <div role="tablist" aria-label={ui.inside.tablist} className="mt-6 md:mt-8 flex gap-3 md:gap-4 justify-start md:justify-center overflow-x-auto no-scrollbar -mx-5 px-5">
           {inside.items.map((x, i) => (
             <button
               key={x.tab}
@@ -145,8 +148,8 @@ export function Inside() {
           </p>
           <dl className="mt-8">
             {[
-              ["Source", it.source],
-              ["Role", it.role],
+              [ui.inside.source, it.source],
+              [ui.inside.role, it.role],
             ].map(([k, v]) => (
               <div data-in-item key={k} className="flex items-baseline justify-between py-5 border-t border-bone/15">
                 <dt className="text-[12px] tracking-[0.2em] uppercase text-bone/55">{k}</dt>
@@ -154,7 +157,7 @@ export function Inside() {
               </div>
             ))}
             <div data-in-item className="relative flex items-baseline justify-between py-5 border-y border-bone/15">
-              <dt className="text-[12px] tracking-[0.2em] uppercase text-bone/55">Level</dt>
+              <dt className="text-[12px] tracking-[0.2em] uppercase text-bone/55">{ui.inside.level}</dt>
               <dd>
                 <span ref={counter} className="font-display text-[24px] tabular-nums">
                   {it.value}

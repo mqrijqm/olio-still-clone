@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useLenis } from "lenis/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { nav } from "@/content/site";
+import { LangToggle, useT } from "@/i18n/LocaleProvider";
 import { useCart } from "./cart/CartProvider";
 import { Icon } from "./Icon";
 
@@ -17,6 +17,8 @@ export function Logo({ className = "", dot = "#8d906e" }: { className?: string; 
 }
 
 export function Nav() {
+  const t = useT();
+  const nav = t.nav;
   const lenis = useLenis();
   const { count, setOpen } = useCart();
   const [visible, setVisible] = useState(false);
@@ -78,15 +80,16 @@ export function Nav() {
             ))}
           </ul>
           <div className="flex-1 flex items-center justify-end gap-6 md:gap-8">
+            <LangToggle className="hidden md:flex" />
             <a
               href="#shop"
               onClick={(e) => { e.preventDefault(); go("#shop"); }}
               className="hidden md:inline-flex items-center gap-1.5 text-[15px] font-[600] text-olive-900 group"
             >
-              Shop
+              {t.ui.shop}
               <Icon name="arrow" size={18} strokeWidth={2.2} className="transition-transform duration-300 group-hover:translate-x-1" />
             </a>
-            <button type="button" onClick={() => setOpen(true)} className="relative text-olive-900" aria-label={`Open cart, ${count} items`}>
+            <button type="button" onClick={() => setOpen(true)} className="relative text-olive-900" aria-label={`${t.ui.openCart}, ${count} ${t.ui.items}`}>
               <Icon name="cart" size={28} strokeWidth={1.8} />
               {count > 0 && (
                 <span className="absolute -top-1 -right-2 min-w-[17px] h-[17px] px-1 rounded-full bg-olive text-bone text-[10px] font-[600] flex items-center justify-center tabular-nums">
@@ -94,7 +97,7 @@ export function Nav() {
                 </span>
               )}
             </button>
-            <button type="button" className="md:hidden w-8 h-8 flex flex-col justify-center gap-[6px]" aria-label="Open menu" onClick={() => setMenu(true)}>
+            <button type="button" className="md:hidden w-8 h-8 flex flex-col justify-center gap-[6px]" aria-label={t.ui.openMenu} onClick={() => setMenu(true)}>
               <span className="block h-px w-6 bg-olive-900" />
               <span className="block h-px w-6 bg-olive-900" />
             </button>
@@ -108,13 +111,13 @@ export function Nav() {
         style={{ opacity: menu ? 1 : 0, pointerEvents: menu ? "auto" : "none" }}
         aria-hidden={!menu}
       >
-        <button type="button" className="absolute top-5 right-5 w-10 h-10 flex items-center justify-center text-olive-900" aria-label="Close menu" onClick={() => setMenu(false)}>
+        <button type="button" className="absolute top-5 right-5 w-10 h-10 flex items-center justify-center text-olive-900" aria-label={t.ui.closeMenu} onClick={() => setMenu(false)}>
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M5 5 L19 19 M19 5 L5 19" />
           </svg>
         </button>
         <ul className="flex-1 flex flex-col justify-center gap-4 px-8">
-          {[...nav, { label: "Shop", href: "#shop" }].map((n, i) => (
+          {[...nav, { label: t.ui.shop, href: "#shop" }].map((n, i) => (
             <li key={n.href} className="overflow-hidden">
               <a
                 href={n.href}
@@ -127,7 +130,10 @@ export function Nav() {
             </li>
           ))}
         </ul>
-        <p className="px-8 pb-10 text-[11px] tracking-[0.24em] uppercase text-mist">Pressed in Messinia, Greece</p>
+        <div className="px-8 pb-10 flex items-center justify-between">
+          <p className="text-[11px] tracking-[0.24em] uppercase text-mist">{t.ui.pressedIn}</p>
+          <LangToggle />
+        </div>
       </div>
     </>
   );

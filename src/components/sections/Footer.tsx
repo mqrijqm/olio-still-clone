@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useLenis } from "lenis/react";
 import { Logo } from "@/components/Nav";
 import { Ill, SplitReveal } from "@/components/ui";
-import { footer, newsletter } from "@/content/site";
+import { useT } from "@/i18n/LocaleProvider";
 
 export function Footer() {
+  const { footer, newsletter, ui } = useT();
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
   const lenis = useLenis();
@@ -36,7 +37,7 @@ export function Footer() {
             className="w-full"
           >
             <label htmlFor="nl-email" className="sr-only">
-              Email address
+              {ui.footer.email}
             </label>
             <div className="flex items-end gap-6 border-b border-olive-900/40 pb-4 focus-within:border-olive-900 transition-colors">
               <input
@@ -46,11 +47,11 @@ export function Footer() {
                 value={email}
                 disabled={done}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={done ? "Thank you. We'll write when it ships." : "Email address"}
+                placeholder={done ? ui.footer.thanks : ui.footer.email}
                 className="flex-1 bg-transparent text-[20px] md:text-[24px] outline-none placeholder:text-mist"
               />
               <button type="submit" disabled={done} className="whitespace-nowrap text-[14px] md:text-[15px] font-[600] tracking-[0.2em] uppercase text-olive-900 hover:text-olive transition-colors">
-                {done ? "Done" : "Sign up"}
+                {done ? ui.footer.done : ui.footer.signup}
               </button>
             </div>
           </form>
@@ -62,7 +63,7 @@ export function Footer() {
             <p className="mt-6 text-[16px] leading-[1.6] text-mist max-w-[34ch]">{footer.blurb}</p>
           </div>
           <div>
-            <p className="text-[12px] tracking-[0.24em] uppercase text-mist">Site</p>
+            <p className="text-[12px] tracking-[0.24em] uppercase text-mist">{ui.footer.site}</p>
             <ul className="mt-6 space-y-4">
               {footer.site.map((l) => (
                 <li key={l.label}>
@@ -74,7 +75,7 @@ export function Footer() {
             </ul>
           </div>
           <div className="md:justify-self-end">
-            <p className="text-[12px] tracking-[0.24em] uppercase text-mist">Legal</p>
+            <p className="text-[12px] tracking-[0.24em] uppercase text-mist">{ui.footer.legal}</p>
             <ul className="mt-6 space-y-4">
               {footer.legal.map((l) => (
                 <li key={l.label}>

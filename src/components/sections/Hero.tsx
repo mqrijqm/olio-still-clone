@@ -5,7 +5,7 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import TinLazy, { type TinControl } from "@/components/webgl/TinLazy";
-import { brand, heroSupport } from "@/content/site";
+import { LangToggle, useT } from "@/i18n/LocaleProvider";
 import { prefersReduced } from "@/lib/motion";
 import { ScrollHint } from "@/components/ui";
 
@@ -16,6 +16,7 @@ const ACCENT = "#b5ba92";
 export function Hero() {
   const root = useRef<HTMLElement>(null);
   const circle = useRef<HTMLDivElement>(null);
+  const { brand, heroSupport } = useT();
   const control = useRef<TinControl>({ rotY: 0, spin: 0, float: 1, tiltX: 0 });
   // razrešava se kad je hero limenka spremna (teksture na GPU, shaderi kompajlirani)
   const [tinGate] = useState(() => {
@@ -115,6 +116,9 @@ export function Hero() {
       <section id="hero" ref={root} className="relative w-full h-[100svh] min-h-[560px] overflow-hidden bg-olive-900">
         {/* bone sloj sa wordmarkom (ispod kruga) */}
         <div className="absolute inset-0 z-10 bg-bone pointer-events-none flex flex-col">
+          <div data-hero-foot style={{ opacity: 0 }} className="absolute top-[clamp(20px,4vh,40px)] right-[clamp(20px,4vw,64px)] pointer-events-auto">
+            <LangToggle />
+          </div>
           <div className="flex-1 flex items-center justify-center overflow-hidden">
             <h1
               className="font-wordmark font-[900] leading-[0.78] tracking-[-0.035em] whitespace-nowrap text-olive select-none"

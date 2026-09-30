@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import { prefersReduced } from "@/lib/motion";
+import { useLocale, useT } from "@/i18n/LocaleProvider";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
 
@@ -49,10 +50,13 @@ export function SplitReveal({
   start?: string;
 }) {
   const ref = useRef<HTMLHeadingElement>(null);
+  const { locale } = useLocale();
+  // SplitText menja DOM naslova; pri promeni jezika naslov se ponovo montira (key) bez animacije
+  const [firstLocale] = useState(locale);
   useGSAP(
     () => {
       const el = ref.current;
-      if (!el || prefersReduced()) return;
+      if (!el || prefersReduced() || locale !== firstLocale) return;
       // split + tween se prave tek kad naslov uđe u ekran — ne sve odjednom na loadu
       let split: SplitText | null = null;
       const st = ScrollTrigger.create({
@@ -70,10 +74,10 @@ export function SplitReveal({
         split?.revert();
       };
     },
-    { scope: ref }
+    { scope: ref, dependencies: [locale] }
   );
   return (
-    <Tag ref={ref as React.Ref<HTMLHeadingElement>} className={className} style={style}>
+    <Tag key={locale} ref={ref as React.Ref<HTMLHeadingElement>} className={className} style={style}>
       {children}
     </Tag>
   );
@@ -144,6 +148,7 @@ export function Ill({
  * unutra tačka koja klizi nadole; "Scroll" ispod.
  */
 export function ScrollHint({ className = "", dark = false }: { className?: string; dark?: boolean }) {
+  const t = useT();
   const line = dark ? "rgba(239,237,230,0.45)" : "rgba(47,49,36,0.38)";
   return (
     <div className={`flex flex-col items-center gap-3 ${className}`} aria-hidden="true">
@@ -155,7 +160,7 @@ export function ScrollHint({ className = "", dark = false }: { className?: strin
         <path d="M15 12.2 C8.6 12.4 5.2 19.6 5.4 28.4 C5.6 38.2 9.6 45.6 15.2 45.6 C21 45.6 24.8 38.4 24.6 28.6 C24.4 19.4 21.2 12 15 12.2 Z" />
         <circle className="olive-dot" cx="15" cy="21" r="2.2" fill="#b5ba92" stroke="none" />
       </svg>
-      <span className={`font-sans text-[11px] uppercase tracking-[0.28em] ${dark ? "text-bone/55" : "text-mist"}`}>Scroll</span>
+      <span className={`font-sans text-[11px] uppercase tracking-[0.28em] ${dark ? "text-bone/55" : "text-mist"}`}>{t.ui.scroll}</span>
     </div>
   );
 }

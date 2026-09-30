@@ -1,3 +1,4 @@
+// Engleski sadržaj (EN). Bosanski prevod istog oblika je u bs.ts.
 // Sav sadržaj sajta na jednom mestu — zameni ovo i dobijaš novi brend na istom šablonu.
 
 export const brand = {
@@ -284,3 +285,62 @@ export const footer = {
   copyright: "© 2026 OLIO Olive Co.",
   made: "Pressed in Messinia, Greece.",
 };
+
+export const flavors = {
+  eyebrow: ["02", "Three harvests"],
+  show: "Show",
+};
+
+export const details = {
+  figs: ["Fig. 06 · The cap, pressed green", "Fig. 07 · First pour of the season", "Fig. 08 · Ink, drawn by hand"],
+};
+
+// sitni tekstovi iz interfejsa (dugmad, korpa, forma…)
+export const ui = {
+  scroll: "Scroll",
+  shop: "Shop",
+  openMenu: "Open menu",
+  closeMenu: "Close menu",
+  openCart: "Open cart",
+  items: "items",
+  pressedIn: "Pressed in Messinia, Greece",
+  language: "Language",
+  cart: {
+    title: "Your cart",
+    close: "Close cart",
+    empty: "Your cart is empty.",
+    emptyBody: "A tin of good oil is a good place to start.",
+    subtotal: "Subtotal",
+    checkout: "Checkout",
+    decrease: "Decrease",
+    increase: "Increase",
+    demo: "Demo store",
+    thanks: "Thank you. This is where the oil would ship.",
+    note: "OLIO is a design case study. No payment was taken and nothing will be sent.",
+    closeBtn: "Close",
+  },
+  product: {
+    size: "Size",
+    subscribeSave: "Subscribe and save 15%",
+    add: "Add to cart",
+    added: "Added ✓",
+    subscribeInstead: "Subscribe instead",
+    comingSoon: "Coming soon",
+    orderDirect: "Or order direct",
+    onTable: "on the table",
+    tin: "tin",
+  },
+  inside: { tablist: "Inside the tin", source: "Source", role: "Role", level: "Level" },
+  story: { chapter: "Chapter" },
+  footer: {
+    email: "Email address",
+    signup: "Sign up",
+    done: "Done",
+    thanks: "Thank you. We'll write when it ships.",
+    site: "Site",
+    legal: "Legal",
+  },
+};
+
+export const en = { brand, nav, heroSupport, products, flavors, inside, story, details, press, stockists, newsletter, footer, ui };
+export type Dict = typeof en;

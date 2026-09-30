@@ -5,6 +5,7 @@ import { CartProvider } from "@/components/cart/CartProvider";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { Nav } from "@/components/Nav";
 import { Cursor } from "@/components/Cursor";
+import { LocaleProvider } from "@/i18n/LocaleProvider";
 import "./globals.css";
 
 // Archivo (wdth 125) = zamena za Söhne Breit — wordmark i veliki naslovi
@@ -21,8 +22,8 @@ const inter = Inter_Tight({ variable: "--font-inter-tight", subsets: ["latin", "
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
-  title: "OLIO. Pressed slow. Poured daily.",
-  description: "Single-origin Greek extra virgin olive oil. Koroneiki olives, pressed within four hours of picking.",
+  title: "OLIO. Sporo cijeđeno. Svaki dan na stolu.",
+  description: "Grčko ekstra djevičansko maslinovo ulje iz jednog maslinjaka. Masline sorte koroneiki, cijeđene u roku od četiri sata od berbe.",
   openGraph: {
     title: "OLIO. Pressed slow. Poured daily.",
     description: "Single-origin Greek extra virgin olive oil. Koroneiki olives, pressed within four hours of picking.",
@@ -34,8 +35,9 @@ export const viewport: Viewport = { themeColor: "#efede6" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${archivo.variable} ${newsreader.variable} ${inter.variable} antialiased`}>
+    <html lang="bs" className={`${archivo.variable} ${newsreader.variable} ${inter.variable} antialiased`}>
       <body>
+        <LocaleProvider>
         <CartProvider>
           <SmoothScroll>
             <Nav />
@@ -45,6 +47,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Cursor />
           <div className="grain-overlay" aria-hidden="true" />
         </CartProvider>
+        </LocaleProvider>
       </body>
     </html>
   );

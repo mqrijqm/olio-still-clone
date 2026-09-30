@@ -7,14 +7,17 @@ import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useLenis } from "lenis/react";
 import { Eyebrow, Ill, Reveal, ScrollHint, SplitReveal } from "@/components/ui";
-import { story } from "@/content/site";
+import { story as storyEn } from "@/content/site";
+import { useT } from "@/i18n/LocaleProvider";
+
 import { prefersReduced } from "@/lib/motion";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-const n = story.chapters.length;
+const n = storyEn.chapters.length;
 
 export function Story() {
+  const { story, ui } = useT();
   const root = useRef<HTMLElement>(null);
   const pinEl = useRef<HTMLDivElement>(null);
   const st = useRef<ScrollTrigger | null>(null);
@@ -101,7 +104,7 @@ export function Story() {
         <div className="relative z-10 mx-auto max-w-[1440px] h-full grid grid-cols-[1fr_minmax(0,39%)_72px] gap-10 items-center px-[clamp(24px,7vw,140px)]" style={{ paddingTop: "var(--nav-h)" }}>
           <div key={ch.year} className="max-w-[640px]">
             <div data-ch-item className="text-[12px] tracking-[0.24em] uppercase text-mist">
-              Chapter {String(active + 1).padStart(2, "0")} <span className="mx-1.5 text-mist/60">·</span> <span className="text-olive-900">{ch.year}</span>
+              {ui.story.chapter} {String(active + 1).padStart(2, "0")} <span className="mx-1.5 text-mist/60">·</span> <span className="text-olive-900">{ch.year}</span>
             </div>
             <h3 data-ch-item className="mt-5 font-display font-[300] leading-[1.05] tracking-[-0.025em]" style={{ fontSize: "clamp(36px, 3.6vw, 60px)" }}>
               {ch.title}
@@ -152,7 +155,7 @@ export function Story() {
             </div>
             <p className="mt-3 text-[10px] tracking-[0.2em] uppercase text-mist">{c.fig}</p>
             <div className="mt-8 text-[12px] tracking-[0.24em] uppercase text-mist">
-              Chapter {String(i + 1).padStart(2, "0")} · <span className="text-olive-900">{c.year}</span>
+              {ui.story.chapter} {String(i + 1).padStart(2, "0")} · <span className="text-olive-900">{c.year}</span>
             </div>
             <h3 className="mt-4 font-display font-[300] text-[38px] leading-[1.05] tracking-[-0.02em]">{c.title}</h3>
             <div className="mt-6 h-px w-[72px] bg-olive-900/60" />

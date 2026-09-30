@@ -5,9 +5,11 @@ import { useState } from "react";
 import { Eyebrow, Ill, Reveal, SplitReveal } from "@/components/ui";
 import { Icon } from "@/components/Icon";
 import { useCart } from "@/components/cart/CartProvider";
-import { products, stockists, type Product } from "@/content/site";
+import { type Product } from "@/content/site";
+import { useT } from "@/i18n/LocaleProvider";
 
 function ProductCard({ p, i }: { p: Product; i: number }) {
+  const t = useT().ui.product;
   const [size, setSize] = useState<"500 ml" | "3 L">("500 ml");
   const [added, setAdded] = useState(false);
   const { add } = useCart();
@@ -24,8 +26,8 @@ function ProductCard({ p, i }: { p: Product; i: number }) {
       <article className="group h-full flex flex-col border border-olive-900/20 p-6 md:p-[clamp(24px,2.3vw,44px)] transition-colors duration-500 hover:border-olive-900/40">
         {/* slika: na hover se limenka zameni lifestyle fotografijom */}
         <div className="relative aspect-[1/1.08] overflow-hidden bg-bone-2">
-          <Image src={p.tin} alt={`${p.code} ${p.name} tin`} fill sizes="(min-width: 768px) 30vw, 90vw" className="object-contain mix-blend-multiply scale-[0.92] transition-all duration-[900ms] ease-out group-hover:scale-100 group-hover:opacity-0" />
-          <Image src={p.life} alt={`${p.code} ${p.name} on the table`} fill sizes="(min-width: 768px) 30vw, 90vw" className="object-cover opacity-0 scale-110 transition-all duration-[900ms] ease-out group-hover:opacity-100 group-hover:scale-100" />
+          <Image src={p.tin} alt={`${p.code} ${p.name}, ${t.tin}`} fill sizes="(min-width: 768px) 30vw, 90vw" className="object-contain mix-blend-multiply scale-[0.92] transition-all duration-[900ms] ease-out group-hover:scale-100 group-hover:opacity-0" />
+          <Image src={p.life} alt={`${p.code} ${p.name}, ${t.onTable}`} fill sizes="(min-width: 768px) 30vw, 90vw" className="object-cover opacity-0 scale-110 transition-all duration-[900ms] ease-out group-hover:opacity-100 group-hover:scale-100" />
           <span className="absolute left-4 top-4 text-[10px] tracking-[0.24em] uppercase text-mist group-hover:text-bone transition-colors duration-700">{p.tag}</span>
         </div>
         <h3 className="mt-7 flex items-baseline gap-2 flex-wrap">
@@ -36,7 +38,7 @@ function ProductCard({ p, i }: { p: Product; i: number }) {
         <p className="mt-3 text-[12px] font-[600] tracking-[0.24em] uppercase text-mist">{p.notes}</p>
         <p className="mt-4 text-[16px] leading-[1.55] text-olive-900/90 min-h-[3.1em]">{p.short}</p>
 
-        <div className="mt-7 flex gap-3" role="radiogroup" aria-label="Size">
+        <div className="mt-7 flex gap-3" role="radiogroup" aria-label={t.size}>
           {(["500 ml", "3 L"] as const).map((s) => (
             <button
               key={s}
@@ -56,17 +58,17 @@ function ProductCard({ p, i }: { p: Product; i: number }) {
           <span className="font-wordmark font-[900] text-[38px] tracking-[-0.02em] tabular-nums leading-none">€{price}</span>
           <span className="text-[16px] text-mist">EUR</span>
         </div>
-        <p className="mt-2 font-display italic text-[16px] text-mist">Subscribe and save 15%</p>
+        <p className="mt-2 font-display italic text-[16px] text-mist">{t.subscribeSave}</p>
 
         <button
           type="button"
           onClick={onAdd}
           className="mt-7 h-[60px] w-full bg-olive text-bone text-[14px] font-[600] tracking-[0.34em] uppercase transition-colors duration-300 hover:bg-olive-700"
         >
-          {added ? "Added ✓" : "Add to cart"}
+          {added ? t.added : t.add}
         </button>
         <button type="button" className="mt-4 self-start inline-flex items-center gap-2 text-[15px] text-olive-900/70 hover:text-olive-900 group/sub">
-          Subscribe instead
+          {t.subscribeInstead}
           <Icon name="arrow" size={16} strokeWidth={2} className="transition-transform group-hover/sub:translate-x-1" />
         </button>
       </article>
@@ -75,6 +77,7 @@ function ProductCard({ p, i }: { p: Product; i: number }) {
 }
 
 export function Shop() {
+  const { products, stockists, ui } = useT();
   return (
     <section id="stockists" className="relative w-full bg-bone overflow-hidden pt-28 md:pt-[140px] pb-24 md:pb-[140px]">
       <div className="mx-auto max-w-[1440px] px-6 md:px-[clamp(24px,7vw,140px)]">
@@ -103,7 +106,7 @@ export function Shop() {
         </div>
 
         <div className="mt-24 md:mt-32 text-center">
-          <p className="text-[13px] font-[600] tracking-[0.5em] uppercase text-mist">Coming soon</p>
+          <p className="text-[13px] font-[600] tracking-[0.5em] uppercase text-mist">{ui.product.comingSoon}</p>
           <p className="mt-6 text-[20px] md:text-[26px] text-olive-900/80 flex flex-wrap justify-center gap-x-5 gap-y-2">
             {stockists.soon.map((c, i) => (
               <span key={c} className="flex items-center gap-5">
@@ -116,7 +119,7 @@ export function Shop() {
 
         <div id="shop" className="mt-28 md:mt-36 flex items-center justify-center gap-8">
           <span className="h-px w-[clamp(40px,8vw,112px)] bg-olive-900/40" />
-          <span className="text-[13px] font-[600] tracking-[0.5em] uppercase text-mist">Or order direct</span>
+          <span className="text-[13px] font-[600] tracking-[0.5em] uppercase text-mist">{ui.product.orderDirect}</span>
           <span className="h-px w-[clamp(40px,8vw,112px)] bg-olive-900/40" />
         </div>
 

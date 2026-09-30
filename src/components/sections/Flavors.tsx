@@ -8,7 +8,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useLenis } from "lenis/react";
 import TinLazy, { type TinControl } from "@/components/webgl/TinLazy";
 import { Eyebrow, Ill } from "@/components/ui";
-import { products, type Product } from "@/content/site";
+import { type Product } from "@/content/site";
+import { useT } from "@/i18n/LocaleProvider";
+
 import { prefersReduced } from "@/lib/motion";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
@@ -36,6 +38,7 @@ function ProductText({ p, big = true }: { p: Product; big?: boolean }) {
 }
 
 export function Flavors() {
+  const { products, flavors } = useT();
   const root = useRef<HTMLElement>(null);
   const pinEl = useRef<HTMLDivElement>(null);
   const text = useRef<HTMLDivElement>(null);
@@ -110,7 +113,7 @@ export function Flavors() {
         ))}
         <div ref={text} className="relative z-10 mx-auto w-full max-w-[1440px] h-full flex flex-col px-[clamp(24px,6vw,120px)]" style={{ paddingTop: "calc(var(--nav-h) + clamp(12px, 3vh, 40px))" }}>
           <div className="flex items-baseline justify-between gap-6 mb-3">
-            <Eyebrow n="02" label="Three harvests" />
+            <Eyebrow n={flavors.eyebrow[0]} label={flavors.eyebrow[1]} />
             <div className="text-[12px] tracking-[0.2em] uppercase text-mist tabular-nums">
               {active + 1} / {products.length}
             </div>
@@ -148,7 +151,7 @@ export function Flavors() {
               type="button"
               onClick={() => goTo(i)}
               className={`text-[13px] tracking-[0.2em] tabular-nums transition-colors ${i === active ? "text-olive-900" : "text-mist/70 hover:text-olive-900"}`}
-              aria-label={`Show ${pr.code} ${pr.name}`}
+              aria-label={`${flavors.show} ${pr.code} ${pr.name}`}
             >
               {pr.id}
             </button>
@@ -158,7 +161,7 @@ export function Flavors() {
 
       {/* ---------- mobilni: složeno jedno ispod drugog, PNG umesto 3D ---------- */}
       <div className="md:hidden px-6 pt-24 pb-10">
-        <Eyebrow n="02" label="Three harvests" />
+        <Eyebrow n={flavors.eyebrow[0]} label={flavors.eyebrow[1]} />
         {products.map((pr) => (
           <article key={pr.id} className="relative mt-14">
             <div className="relative aspect-[4/5] -mx-6 overflow-hidden" style={{ background: `radial-gradient(60% 60% at 50% 50%, ${pr.accent}55, transparent 75%)` }}>
